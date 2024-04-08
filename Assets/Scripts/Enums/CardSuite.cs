@@ -6,9 +6,9 @@ namespace Solitare.Enums
 {
     public enum CardSuite
     {
+        Heart,
         Diamond,
-        Spade,
         Club,
-        Heart
+        Spade
     }
 }

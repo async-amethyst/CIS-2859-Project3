@@ -1,10 +1,17 @@
+using Solitare.Enums;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Row : MonoBehaviour
 {
-    private List<Card> cards;
+    private List<string> _cards = new List<string>();
+    private List<Card> _cardList = new List<Card>();
+    private GameObject _cardObjects;
+
+    public List<Card> CardList => _cardList;
+    public Card GetBottomCard() => _cardList[_cardList.Count - 1];
+    public bool IsEmpty => _cardList.Count == 0;
     void Start()
     {
         
@@ -15,55 +22,89 @@ public class Row : MonoBehaviour
         
     }
 
-    private void UpdateCardList(Card movedCard, Row targetRow)
+    public void AddCard(string val) 
+    { 
+        _cards.Add(val); 
+    }
+
+    public void AddCardToList(Card card)
     {
-        var movedCardIndex = cards.IndexOf(movedCard);
-        if(movedCardIndex == 0)
+        _cardList.Add(card);
+    }
+
+    public void AddCardObj(Card cardToAdd)
+    {
+        if(_cardList.Count > 0)
         {
-            foreach(var card in cards)
+            var finalCard = _cardList[_cardList.Count - 1];
+            _cardList.Add(cardToAdd);
+            if (finalCard)
             {
-                targetRow.AddCard(card);
-                cards.Remove(card);
+                cardToAdd.transform.parent = finalCard.transform;
+                cardToAdd.transform.localPosition = new Vector2(0, Card.CardOffset);
+                cardToAdd.Sprite.rendererPriority = _cardList.IndexOf(cardToAdd);
             }
+            cardToAdd.transform.localScale = new Vector2(1f, 1f);
             return;
         }
-        while (cards[movedCardIndex])
+        _cardList.Add(cardToAdd);
+        cardToAdd.transform.localScale = new Vector2(1f, 1f);
+
+        //Transform tempTrans = null;
+        //tempTrans = cardToAdd.transform.GetChild(0);
+        /*while(tempTrans)
         {
-            targetRow.AddCard(cards[movedCardIndex]);
-            cards.Remove(cards[movedCardIndex]);
+            _cardList.Add(tempTrans.GetComponent<Card>());
+            tempTrans = tempTrans.GetChild(0);
+        }*/
+    }
+
+    public void TryFlipFinalCard()
+    {
+        if (_cardList[_cardList.Count - 1])
+        {
+            _cardList[_cardList.Count - 1].FlipCard();
         }
     }
 
-    public bool CanBeDropped(Card cardToDrop)
+    public void RemoveCard(Card cardToRemove, Row targetRow)
     {
-        if ((cardToDrop.Color == cards[cards.Count - 1].Color) || (cardToDrop.Number != cards[cards.Count - 1].Number - 1)) return false;
-        return true;
-    }
-
-    public void DropCard(Card cardToDrop)
-    {
-        if(cardToDrop.IsOnAceStack)
+        var index = _cardList.IndexOf(cardToRemove);
+        _cardList.Remove(cardToRemove);
+        cardToRemove.SetCardRow(targetRow);
+        targetRow.AddCardObj(cardToRemove);
+        for(int i = index + 1; i < _cardList.Count; i++) //By adding this here we don't have to do AddComponent and all that shit
         {
-
+            var card = _cardList[i];
+            _cardList.Remove(card);
+            targetRow.AddCardToList(card);
+            card.SetCardRow(targetRow);
         }
-        cardToDrop.CardRow.UpdateCardList(cardToDrop, this);
-        cardToDrop.transform.parent = cards[cards.Count - 1].transform;
-        // set position so that they are aligned
-    }
-    
-    private void MoveFromAceStack(Card cardToMove)
-    {
-        GameManager.Instance.GetAceStack(cardToMove.Suit).OnCardRemoved(cardToMove);
-        cardToMove.SetCardRow(this);
-        cardToMove.transform.SetParent(cards[cards.Count - 1].transform);
-        cards.Add(cardToMove);
-        // set local transform
+        if(_cardList.Count > 0 && !_cardList[_cardList.Count - 1].Grabbable)
+        {
+            _cardList[_cardList.Count - 1].FlipCard();
+        }
     }
 
-    public void AddCard(Card cardToAdd) { cards.Add(cardToAdd); }
-    public byte GetCardChildCount(Card cardToCheck)
+    public void InstantiateCardObjects()
     {
-        var index = cards.IndexOf(cardToCheck);
-        return (byte)(cards.Count - index);
+        Transform parent = null;
+        foreach(var card in _cards)
+        {
+            var cardObj = Instantiate(GameManager.Instance.CardPrefab);
+            cardObj.transform.parent = this.transform;
+            cardObj.transform.localPosition = Vector2.zero;
+            if (parent != null) { cardObj.transform.parent = parent; cardObj.transform.localPosition = new Vector2(0, Card.CardOffset); }
+            var cardScript = cardObj.GetComponent<Card>();
+            cardScript.SetCardValue(card);
+            cardScript.SetCardRow(this);
+            _cardList.Add(cardScript);
+            cardScript._cardSprite.rendererPriority = _cardList.IndexOf(cardScript);
+            parent = cardObj.transform;
+            if(card == _cards[_cards.Count - 1]) // If it's the last card in the row...
+            {
+                cardScript.FlipCard();
+            }
+        }
     }
 }
