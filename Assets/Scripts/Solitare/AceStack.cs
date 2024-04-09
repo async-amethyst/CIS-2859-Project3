@@ -50,13 +50,26 @@ public class AceStack : MonoBehaviour
         _cardsOnStack.Add(cardToAdd);
         cardToAdd.transform.parent = this.transform;
         cardToAdd.transform.localPosition = new Vector2(0, 0);
-        cardToAdd.Sprite.rendererPriority = _nextCardNumber;
-        cardToAdd.transform.localScale = Vector3.one;
+        cardToAdd.Sprite.sortingOrder = _nextCardNumber;
         _nextCardNumber = (byte)(_cardsOnStack.Count + 1);
+        if(cardToAdd.Number == 13 && GameManager.Instance.CheckWin())
+        {
+            GameManager.OnGameWin.Invoke();
+        }
     }
 
     public bool CanDropCard(Card cardToDrop)
     {
         return (cardToDrop.Suit == _stackSuit) && (cardToDrop.Number == _nextCardNumber);
+    }
+
+    public void ClearCards()
+    {
+        foreach(var card in _cardsOnStack)
+        {
+            Destroy(card.gameObject);
+        }
+        _cardsOnStack.Clear();
+        _nextCardNumber = 1;
     }
 }

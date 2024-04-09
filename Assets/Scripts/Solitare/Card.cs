@@ -14,6 +14,7 @@ public class Card : MonoBehaviour
     private bool _flipped;
     private bool _canBeGrabbed;
     public SpriteRenderer _cardSprite;
+    public BoxCollider collider;
     private byte _childCount;
     private bool _isOnAceStack;
     private Row _cardRow;
@@ -54,6 +55,7 @@ public class Card : MonoBehaviour
     {
         _cardSprite = GetComponent<SpriteRenderer>();
         _cardSprite.sprite = GetCardSprite();
+        collider.enabled = true;
         _canBeGrabbed = true;
     }
 

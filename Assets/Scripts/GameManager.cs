@@ -9,8 +9,12 @@ public class GameManager : MonoSingleton<GameManager>
 {
     [SerializeField] private AceStack[] _aceStacks;
     [SerializeField] private Row[] _rows;
+    [SerializeField] private GameObject _solitareGamePrefab;
     public Card HoveredCard;
     public GameObject CardPrefab;
+    public static Action OnGameWin;
+    public static Action CallGameStart;
+    public static Action OnGameRestart;
     private bool _isGrabbing;
 
     private List<string> cardPile = new List<string>();
@@ -19,20 +23,24 @@ public class GameManager : MonoSingleton<GameManager>
 
     public Row HoveredRowToDrop;
     public AceStack HoveredAceStackToDrop;
+    public byte Difficulty = 1; // 1 - easy, 2 - hard
+    public GameObject GamePrefab;
     public List<string> CardPile => cardPile;
 
     private void Start()
     {
-        GenerateGameStart();
+        CallGameStart += GenerateGameStart;
+        OnGameRestart += ResetCards;
     }
     private void Update()
     {
 
     }
 
-    public void GenerateGameStart()
+    private void GenerateGameStart()
     {
         shuffledDeck.Clear();
+        cardPile.Clear();
         for(int i = 0; i < 4; i++)
         {
             for(int j = 1; j < 14; j++)
@@ -62,6 +70,20 @@ public class GameManager : MonoSingleton<GameManager>
         DrawPile.Instance.InstantiateAndPrepareDrawCards();
     }
 
+    private void ResetCards()
+    {
+        foreach(var row in _rows)
+        {
+            row.ClearCards();
+        }
+        foreach(var stack in _aceStacks)
+        {
+            stack.ClearCards();
+        }
+        DrawPile.Instance.ClearCards();
+        CallGameStart.Invoke();
+    }
+
     private void ShuffleList()
     {
         for(int i = shuffledDeck.Count - 1; i > 0; i--)
@@ -79,6 +101,15 @@ public class GameManager : MonoSingleton<GameManager>
         {
             receiver.CheckShouldActivate(inputCard);
         }
+    }
+
+    public bool CheckWin()
+    {
+        foreach(var stack in _aceStacks)
+        {
+            if (stack.NextNumber != 14) return false;
+        }
+        return true;
     }
 
     public AceStack GetAceStack(CardSuite suit) => _aceStacks[(int)suit];

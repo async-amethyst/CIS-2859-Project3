@@ -33,8 +33,12 @@ public class DrawPile : MonoSingleton<DrawPile>
 
     public void DrawCard()
     {
-        if(cardList.Count >= _activeCardIndex) cardList[_activeCardIndex].gameObject.SetActive(false);
-        _activeCardIndex++;
+        if(cardList.Count > _activeCardIndex) cardList[_activeCardIndex].gameObject.SetActive(false);
+        if(GameManager.Instance.Difficulty == 1)
+        {
+            _activeCardIndex++;
+        }
+        else { _activeCardIndex += 3; }
         if (_activeCardIndex >= cardList.Count) _activeCardIndex = 0;
         cardList[_activeCardIndex].gameObject.SetActive(true);
     }
@@ -47,5 +51,14 @@ public class DrawPile : MonoSingleton<DrawPile>
     private void OnMouseExit()
     {
         PlayerInputManager.Instance.IsDeckHovered = false;
+    }
+
+    public void ClearCards()
+    {
+        foreach(var card in cardList)
+        {
+            Destroy(card.gameObject);
+        }
+        cardList.Clear();
     }
 }

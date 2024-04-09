@@ -53,7 +53,21 @@ public class CardReceiver : MonoBehaviour
     {
         cardToDrop.transform.localScale = Vector3.one;
         cardToDrop.transform.parent = null;
-        if(cardToDrop.IsOnAceStack)
+        if (cardToDrop.CardRow == null && _associatedAceStack) //Card coming from a Row, and going on the ace stack.
+        {
+            cardToDrop.IsOnAceStack = true;
+            _associatedAceStack.OnCardAdd(cardToDrop);
+            DrawPile.Instance.cardList.Remove(cardToDrop);
+            return;
+        }
+        else if (cardToDrop.CardRow == null && _associatedRow) // If card is going on a Row, and came from the pile
+        {
+            cardToDrop.SetCardRow(_associatedRow);
+            _associatedRow.AddCardObj(cardToDrop);
+            DrawPile.Instance.cardList.Remove(cardToDrop);
+            return;
+        }
+        else if (cardToDrop.IsOnAceStack)
         {
             AceStack stack = GameManager.Instance.GetAceStack(cardToDrop.Suit);
             stack.OnCardRemoved(cardToDrop);
@@ -61,18 +75,11 @@ public class CardReceiver : MonoBehaviour
             cardToDrop.CardRow.RemoveCard(cardToDrop, _associatedRow);
             return;
         }
-        if(_associatedAceStack)
+        else if(_associatedAceStack)
         {
             cardToDrop.IsOnAceStack = true;
-            if(cardToDrop.CardRow) cardToDrop.CardRow.TryFlipFinalCard();
+            if (cardToDrop.CardRow) cardToDrop.CardRow.RemoveCard(cardToDrop);
             _associatedAceStack.OnCardAdd(cardToDrop);
-            return;
-        }
-        if(cardToDrop.CardRow == null && _associatedRow)
-        {
-            cardToDrop.SetCardRow(_associatedRow);
-            _associatedRow.AddCardObj(cardToDrop);
-            DrawPile.Instance.cardList.Remove(cardToDrop);
             return;
         }
         cardToDrop.CardRow.RemoveCard(cardToDrop, _associatedRow);

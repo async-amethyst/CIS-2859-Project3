@@ -32,11 +32,11 @@ public class PlayerInputManager : MonoSingleton<PlayerInputManager>
             }
             return;
         }
-        if(playerClicking && !_cardCurrentlySelected && CurrentHoveredCard)
+        if(playerClicking && !_cardCurrentlySelected && CurrentHoveredCard && CurrentHoveredCard.Grabbable)
         {
             _currentlySelectedCard = CurrentHoveredCard;
             _cardCurrentlySelected = true;
-            _currentlySelectedCard.transform.localScale = new Vector2(1.2f, 1.2f);
+            _currentlySelectedCard.transform.localScale *= 1.2f;
             GameManager.Instance.ActivateReceivers(_currentlySelectedCard);
             _onCooldown = true;
         }
@@ -48,7 +48,7 @@ public class PlayerInputManager : MonoSingleton<PlayerInputManager>
         }
         else if(playerClicking && _cardCurrentlySelected && !CurrentHoveredReceiver && !CurrentHoveredCard)
         {
-            _currentlySelectedCard.transform.localScale = new Vector2(1f, 1f);
+            _currentlySelectedCard.transform.localScale *= 0.833333f;
             ResetVariables();
             _onCooldown = true;
         }
